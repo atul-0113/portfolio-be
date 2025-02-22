@@ -11,7 +11,8 @@ const validate = (validations) => {
     }
 
     const extractedErrors = errors.array().map(err => err.msg);
-    throw new ApiError(400, extractedErrors[0]);
+    const apiError = new ApiError(400, extractedErrors[0]);
+    next(apiError);
   };
 };
 

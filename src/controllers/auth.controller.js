@@ -1,4 +1,4 @@
-const { User } = require('../models/user.model.js');
+const User  = require('../models/user.model');
 const { ApiError } = require('../utils/ApiError.js');
 const { generateToken } = require('../utils/jwt.js');
 
@@ -27,9 +27,10 @@ const authController = {
           id: user._id,
           email: user.email,
           name: user.name,
-          role: user.role
+          role: user.role,
+          token
         },
-        token
+        
       });
     } catch (error) {
       next(error);
@@ -53,9 +54,10 @@ const authController = {
           id: user._id,
           email: user.email,
           name: user.name,
-          role: user.role
+          role: user.role,
+          token
         },
-        token
+        
       });
     } catch (error) {
       next(error);

@@ -6,6 +6,6 @@ const CategorySchema = new mongoose.Schema({
   categoryImagePath: { type: String },
   createdOn: { type: Date, default: Date.now },
   createdById: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-});
+},{ versionKey: false });
 
 module.exports = mongoose.models.Category || mongoose.model('Category', CategorySchema);

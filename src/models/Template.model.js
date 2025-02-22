@@ -7,6 +7,6 @@ const TemplateSchema = new mongoose.Schema({
   createdById: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   isActive: { type: Boolean, default: true },
   code: { type: String, required: true }, // Or mongoose.Schema.Types.Mixed for JSON/HTML
-});
+},{ versionKey: false });
 
 module.exports = mongoose.models.Template || mongoose.model('Template', TemplateSchema);
