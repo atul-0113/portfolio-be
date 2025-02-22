@@ -1,7 +1,7 @@
-import { validationResult } from 'express-validator';
-import { ApiError } from '../utils/ApiError.js';
+const { validationResult } = require('express-validator');
+const { ApiError } = require('../utils/ApiError');
 
-export const validate = (validations) => {
+const validate = (validations) => {
   return async (req, res, next) => {
     await Promise.all(validations.map(validation => validation.run(req)));
 
@@ -14,3 +14,5 @@ export const validate = (validations) => {
     throw new ApiError(400, extractedErrors[0]);
   };
 };
+
+module.exports = { validate };

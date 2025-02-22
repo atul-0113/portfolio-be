@@ -1,7 +1,7 @@
-import { User } from '../models/user.model.js';
-import { ApiError } from '../utils/ApiError.js';
+const User = require('../models/user.model.js');
+const ApiError = require('../utils/ApiError.js');
 
-export const userController = {
+const userController = {
   async getProfile(req, res, next) {
     try {
       const user = await User.findById(req.user.id);
@@ -59,3 +59,5 @@ export const userController = {
     }
   }
 };
+
+module.exports = userController;

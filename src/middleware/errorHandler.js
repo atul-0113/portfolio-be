@@ -1,6 +1,6 @@
-import { ApiError } from '../utils/ApiError.js';
+const { ApiError } = require('../utils/ApiError');
 
-export const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res, next) => {
   if (err instanceof ApiError) {
     return res.status(err.status).json({
       status: 'error',
@@ -9,9 +9,11 @@ export const errorHandler = (err, req, res, next) => {
   }
 
   console.error(err);
-  
+
   return res.status(500).json({
     status: 'error',
     message: 'Internal server error'
   });
 };
+
+module.exports = { errorHandler };

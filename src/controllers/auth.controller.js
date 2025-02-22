@@ -1,11 +1,11 @@
-import { User } from '../models/user.model.js';
-import { ApiError } from '../utils/ApiError.js';
-import { generateToken } from '../utils/jwt.js';
+const { User } = require('../models/user.model.js');
+const { ApiError } = require('../utils/ApiError.js');
+const { generateToken } = require('../utils/jwt.js');
 
-export const authController = {
+const authController = {
   async signup(req, res, next) {
     try {
-      const { email, password, name , role = 'USER' } = req.body;
+      const { email, password, name, role = 'USER' } = req.body;
 
       const userExists = await User.findOne({ email });
       if (userExists) {
@@ -27,7 +27,7 @@ export const authController = {
           id: user._id,
           email: user.email,
           name: user.name,
-          role : user.role
+          role: user.role
         },
         token
       });
@@ -68,3 +68,5 @@ export const authController = {
     });
   }
 };
+
+module.exports = authController;

@@ -1,15 +1,19 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import dotenv from 'dotenv';
-import { connectDB } from './config/database.js';
-import { errorHandler } from './middleware/errorHandler.js';
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const dotenv = require('dotenv');
+const { connectDB } = require('./config/database.js');
+const { errorHandler } = require('./middleware/errorHandler.js');
+
+// Import routes using require (CommonJS)
 const authRoutes = require('./routes/auth.routes.js');
 const userRoutes = require('./routes/user.routes.js');
 const categoriesRouter = require('./routes/category.routes.js');
-const templatesRouter = require('./routes/template.route.js');
+const templatesRouter = require('./routes/template.routes.js');
+
 dotenv.config();
+console.log("Hello");
 
 // Connect to MongoDB
 connectDB();
@@ -41,3 +45,6 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// Export app for testing
+module.exports = app;

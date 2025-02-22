@@ -1,10 +1,10 @@
-import { ApiError } from '../utils/ApiError.js';
-import { verifyToken } from '../utils/jwt.js';
+const { ApiError } = require('../utils/ApiError');
+const { verifyToken } = require('../utils/jwt');
 
-export const authMiddleware = async (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
     let token;
-    
+
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
     }
@@ -24,3 +24,5 @@ export const authMiddleware = async (req, res, next) => {
     next(error);
   }
 };
+
+module.exports = { authMiddleware };

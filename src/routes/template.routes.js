@@ -1,6 +1,6 @@
-import express from 'express';
-import { templateController } from '../controllers/template.controller';
-import { authMiddleware } from '../middleware/auth.middleware.js';
+const express = require('express');
+const templateController = require('../controllers/template.controller');
+const { authMiddleware } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
@@ -8,4 +8,4 @@ router.use(authMiddleware);
 
 router.get('/', templateController.getTemplate);
 
-export default router;
+module.exports = router;
