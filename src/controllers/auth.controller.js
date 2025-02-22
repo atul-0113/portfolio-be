@@ -5,7 +5,7 @@ import { generateToken } from '../utils/jwt.js';
 export const authController = {
   async signup(req, res, next) {
     try {
-      const { email, password, name } = req.body;
+      const { email, password, name , role = 'USER' } = req.body;
 
       const userExists = await User.findOne({ email });
       if (userExists) {
@@ -15,7 +15,8 @@ export const authController = {
       const user = await User.create({
         email,
         password,
-        name
+        name,
+        role
       });
 
       const token = generateToken(user._id);
@@ -25,7 +26,8 @@ export const authController = {
         user: {
           id: user._id,
           email: user.email,
-          name: user.name
+          name: user.name,
+          role : user.role
         },
         token
       });
@@ -50,7 +52,8 @@ export const authController = {
         user: {
           id: user._id,
           email: user.email,
-          name: user.name
+          name: user.name,
+          role: user.role
         },
         token
       });
