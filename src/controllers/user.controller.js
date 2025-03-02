@@ -57,6 +57,18 @@ const userController = {
     } catch (error) {
       next(error);
     }
+  },
+  async getUsers(req,res,next){
+    try {
+      const user_list = await User.find();
+      if (!user_list) {
+        throw new ApiError(404, 'No Category found');
+      }
+
+      res.status(200).json(user_list);
+    } catch (error) {
+      next(error);
+    }
   }
 };
 

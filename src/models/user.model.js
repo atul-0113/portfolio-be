@@ -23,6 +23,18 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  isActive:{
+    type: Boolean,
+    default: true
+  },
+  isSubscribed:{
+    type: Boolean,
+    default: false
+  },
+  mobileNumber:{
+    type: Number,
+    trim: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now

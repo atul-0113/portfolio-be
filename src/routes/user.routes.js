@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.use(authMiddleware);
 
-router.get('/profile', userController.getProfile);
-router.patch('/profile', userController.updateProfile);
-
+router.get('/profile', authMiddleware,userController.getProfile);
+router.patch('/profile', authMiddleware,userController.updateProfile);
+router.get('/', authMiddleware,userController.getUsers);
 module.exports = router;
