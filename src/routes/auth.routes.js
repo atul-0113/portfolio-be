@@ -15,6 +15,7 @@ const authValidation = [
 ];
 
 router.post('/signup', validate(authValidation), authController.signup);
+router.post('/register', validate(authValidation), authController.register);
 router.post('/login', validate(authValidation), authController.login);
 router.post('/logout', authController.logout);
 

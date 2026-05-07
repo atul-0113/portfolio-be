@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id             String     @id @default(uuid())
+  email          String     @unique
+  password       String
+  name           String?
+  role           Role       @default(USER)
+  isActive       Boolean    @default(true)
+  isSubscribed   Boolean    @default(false)
+  mobileNumber   String?
+  createdAt      DateTime   @default(now())
+  categories     Category[]
+  templates      Template[]
+}
+
+model Category {
+  id                String     @id @default(uuid())
+  categoryName      String
+  isActive          Boolean    @default(true)
+  categoryImagePath String?
+  createdOn         DateTime   @default(now())
+  createdById       String
+  createdBy         User       @relation(fields: [createdById], references: [id])
+  templates         Template[]
+}
+
+model Template {
+  id           String   @id @default(uuid())
+  templateName String
+  categoryType String
+  category     Category @relation(fields: [categoryType], references: [id])
+  createdOn    DateTime @default(now())
+  createdById  String
+  createdBy    User     @relation(fields: [createdById], references: [id])
+  isActive     Boolean  @default(true)
+  code         String
+}

@@ -1,15 +1,18 @@
-const Template = require('../models/Template.model.js');
-const ApiError = require('../utils/ApiError.js');
+const { prisma } = require('../config/prisma');
+const { ApiError } = require('../utils/ApiError.js');
 
 const templateController = {
   async getTemplate(req, res, next) {
     try {
-      const template = await Template.findById(req.user.id);
-      if (!template) {
+      const templates = await prisma.template.findMany({
+        where: { createdById: req.user.id }
+      });
+
+      if (!templates.length) {
         throw new ApiError(404, 'Template not found');
       }
 
-      res.status(200).json(template);
+      res.status(200).json(templates);
     } catch (error) {
       next(error);
     }

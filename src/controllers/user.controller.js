@@ -1,17 +1,17 @@
-const User = require('../models/user.model.js');
-const ApiError = require('../utils/ApiError.js');
+const { prisma } = require('../config/prisma');
+const { ApiError } = require('../utils/ApiError.js');
 
 const userController = {
   async getProfile(req, res, next) {
     try {
-      const user = await User.findById(req.user.id);
+      const user = await prisma.user.findUnique({ where: { id: req.user.id } });
       if (!user) {
         throw new ApiError(404, 'User not found');
       }
 
       res.status(200).json({
         user: {
-          id: user._id,
+          id: user.id,
           email: user.email,
           name: user.name,
           role: user.role
@@ -25,33 +25,34 @@ const userController = {
   async updateProfile(req, res, next) {
     try {
       const { name, email } = req.body;
-      const user = await User.findById(req.user.id);
+      const user = await prisma.user.findUnique({ where: { id: req.user.id } });
 
       if (!user) {
         throw new ApiError(404, 'User not found');
       }
 
       if (email && email !== user.email) {
-        const emailExists = await User.findOne({ email });
+        const emailExists = await prisma.user.findUnique({ where: { email } });
         if (emailExists) {
           throw new ApiError(400, 'Email already in use');
         }
-        user.email = email;
       }
 
-      if (name) {
-        user.name = name;
-      }
-
-      await user.save();
+      const updatedUser = await prisma.user.update({
+        where: { id: req.user.id },
+        data: {
+          ...(email ? { email } : {}),
+          ...(name ? { name } : {})
+        }
+      });
 
       res.status(200).json({
         message: 'Profile updated successfully',
         user: {
-          id: user._id,
-          email: user.email,
-          name: user.name, 
-          role: user.role
+          id: updatedUser.id,
+          email: updatedUser.email,
+          name: updatedUser.name,
+          role: updatedUser.role
         }
       });
     } catch (error) {
@@ -60,10 +61,18 @@ const userController = {
   },
   async getUsers(req,res,next){
     try {
-      const user_list = await User.find();
-      if (!user_list) {
-        throw new ApiError(404, 'No Category found');
-      }
+      const user_list = await prisma.user.findMany({
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          isActive: true,
+          isSubscribed: true,
+          mobileNumber: true,
+          createdAt: true
+        }
+      });
 
       res.status(200).json(user_list);
     } catch (error) {

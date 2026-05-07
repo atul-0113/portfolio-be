@@ -4,13 +4,12 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
 const { connectDB } = require('./config/database.js');
+const { swaggerUi, swaggerDocument } = require('./config/swagger.js');
 const { errorHandler } = require('./middleware/errorHandler.js');
 // Import routes using require
 const routes = require('./routes');
 dotenv.config();
-console.log("Hello");
-
-// Connect to MongoDB
+// Connect to database
 connectDB();
 
 const app = express();
@@ -24,6 +23,10 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/uploads', express.static('public/uploads'));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.get('/api-docs.json', (req, res) => {
+  res.status(200).json(swaggerDocument);
+});
 
 // Routes
 app.use('/api', routes);
