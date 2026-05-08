@@ -3,7 +3,7 @@
 Base URL:
 
 ```text
-http://localhost:5000
+http://localhost:5001
 ```
 
 API routes are mounted under `/api`.
@@ -304,6 +304,33 @@ Response `501`:
 
 Mounted category routes are also available under this path.
 
+## Admin
+
+### GET `/api/admin/dashboard`
+
+Admin only. Returns dashboard summary counts.
+
+Response `200`:
+
+```json
+{
+  "users": {
+    "total": 10,
+    "active": 9,
+    "admins": 1
+  },
+  "categories": {
+    "total": 5,
+    "active": 4,
+    "inactive": 1
+  },
+  "templates": {
+    "total": 12,
+    "active": 10
+  }
+}
+```
+
 ## TODO Placeholder APIs
 
 The following modules are scaffolded and return `501` until wired later:
@@ -311,7 +338,6 @@ The following modules are scaffolded and return `501` until wired later:
 - `/api/resumes`
 - `/api/ai`
 - `/api/billing`
-- `/api/admin`
 
 Response:
 

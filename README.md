@@ -118,4 +118,4 @@ npm run prisma:generate
 - `/api/resumes` (TODO Later placeholder)
 - `/api/ai` (TODO Later placeholder)
 - `/api/billing` (TODO Later placeholder)
-- `/api/admin` (TODO Later placeholder)
+- `/api/admin/dashboard` admin only
