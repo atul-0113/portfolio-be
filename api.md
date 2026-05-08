@@ -266,7 +266,286 @@ Response `200`:
 
 Alias for `PATCH /api/categories/:id`.
 
-## Templates
+## Resume Builder
+
+### GET `/api/resumes`
+
+Returns resumes owned by the authenticated user. Admin users can see all resumes.
+
+Response `200`:
+
+```json
+[
+  {
+    "id": "uuid",
+    "userId": "uuid",
+    "title": "Senior Frontend Resume",
+    "slug": "senior-frontend-resume",
+    "domain": "frontend",
+    "templateId": "uuid",
+    "status": "draft",
+    "visibility": "private",
+    "currentVersionId": "uuid",
+    "currentVersion": {
+      "id": "uuid",
+      "versionNumber": 1,
+      "resumeJson": {}
+    },
+    "metadata": {
+      "title": "Senior Frontend Resume",
+      "slug": "senior-frontend-resume",
+      "domain": "frontend",
+      "status": "draft",
+      "visibility": "private",
+      "templateId": "uuid",
+      "currentVersionId": "uuid",
+      "currentVersionNumber": 1,
+      "versionCount": 1,
+      "createdAt": "2026-05-08T10:00:00.000Z",
+      "updatedAt": "2026-05-08T10:00:00.000Z"
+    },
+    "themeSettings": {
+      "font": "Inter",
+      "accentColor": "#2563eb"
+    },
+    "createdAt": "2026-05-08T10:00:00.000Z",
+    "updatedAt": "2026-05-08T10:00:00.000Z"
+  }
+]
+```
+
+### POST `/api/resumes`
+
+Creates a resume. Users may select a template with `templateId`, or omit it and provide custom `themeSettings` and `resumeJson`.
+
+Request:
+
+```json
+{
+  "title": "Senior Frontend Resume",
+  "slug": "senior-frontend-resume",
+  "domain": "frontend",
+  "templateId": "uuid",
+  "status": "draft",
+  "visibility": "private",
+  "themeSettings": {
+    "font": "Inter",
+    "accentColor": "#2563eb",
+    "layout": "compact"
+  },
+  "resumeJson": {
+    "basics": {
+      "name": "User Name",
+      "headline": "Senior Frontend Engineer"
+    },
+    "sections": []
+  },
+  "changeSummary": "Initial resume draft"
+}
+```
+
+Response `201`:
+
+```json
+{
+  "message": "Resume created successfully",
+  "resume": {
+    "id": "uuid",
+    "title": "Senior Frontend Resume",
+    "currentVersionId": "uuid"
+  }
+}
+```
+
+### GET `/api/resumes/:id`
+
+Returns a resume with its selected template and current version.
+
+Response `200`:
+
+```json
+{
+  "id": "uuid",
+  "title": "Senior Frontend Resume",
+  "template": {
+    "id": "uuid",
+    "name": "Modern Resume"
+  },
+  "currentVersion": {
+    "id": "uuid",
+    "versionNumber": 1,
+    "resumeJson": {}
+  }
+}
+```
+
+### PATCH `/api/resumes/:id`
+
+Updates resume metadata, selected template, status, visibility, or theme settings.
+
+Request:
+
+```json
+{
+  "title": "Updated Resume",
+  "templateId": "uuid",
+  "status": "published",
+  "visibility": "public",
+  "themeSettings": {
+    "font": "Lato",
+    "accentColor": "#111827"
+  }
+}
+```
+
+Response `200`:
+
+```json
+{
+  "message": "Resume updated successfully",
+  "resume": {
+    "id": "uuid",
+    "title": "Updated Resume",
+    "visibility": "public"
+  }
+}
+```
+
+### DELETE `/api/resumes/:id`
+
+Deletes a resume and its versions.
+
+Response `200`:
+
+```json
+{
+  "message": "Resume deleted successfully"
+}
+```
+
+### GET `/api/resumes/:id/versions`
+
+Returns version history for a resume.
+
+Response `200`:
+
+```json
+[
+  {
+    "id": "uuid",
+    "resumeId": "uuid",
+    "versionNumber": 2,
+    "resumeJson": {},
+    "changeSummary": "Updated work experience",
+    "createdBy": "uuid",
+    "createdAt": "2026-05-08T10:15:00.000Z"
+  }
+]
+```
+
+### POST `/api/resumes/:id/versions`
+
+Creates a new version and makes it the current version.
+
+Request:
+
+```json
+{
+  "resumeJson": {
+    "basics": {
+      "name": "User Name"
+    },
+    "sections": []
+  },
+  "changeSummary": "Updated skills section"
+}
+```
+
+Response `201`:
+
+```json
+{
+  "message": "Resume version created successfully",
+  "version": {
+    "id": "uuid",
+    "versionNumber": 2,
+    "resumeJson": {}
+  }
+}
+```
+
+## Resume Templates
+
+### GET `/api/resumes/templates`
+
+Returns active system templates plus templates created by the authenticated user.
+
+Response `200`:
+
+```json
+[
+  {
+    "id": "uuid",
+    "name": "Modern Resume",
+    "slug": "modern-resume",
+    "thumbnailUrl": "https://example.com/thumb.png",
+    "category": "software",
+    "isPremium": false,
+    "isSystem": true,
+    "isActive": true,
+    "config": {
+      "sections": ["summary", "experience", "skills"]
+    },
+    "createdById": null,
+    "createdAt": "2026-05-08T10:00:00.000Z"
+  }
+]
+```
+
+### POST `/api/resumes/templates`
+
+Creates a custom resume template for the authenticated user. Admin users can also create system or premium templates.
+
+Request:
+
+```json
+{
+  "name": "My Custom Template",
+  "slug": "my-custom-template",
+  "thumbnailUrl": "https://example.com/thumb.png",
+  "category": "software",
+  "isPremium": false,
+  "isSystem": false,
+  "config": {
+    "layout": "two-column",
+    "sections": ["summary", "experience", "projects", "skills"],
+    "theme": {
+      "font": "Inter",
+      "accentColor": "#2563eb"
+    }
+  }
+}
+```
+
+Response `201`:
+
+```json
+{
+  "message": "Resume template created successfully",
+  "template": {
+    "id": "uuid",
+    "name": "My Custom Template",
+    "isSystem": false,
+    "config": {}
+  }
+}
+```
+
+### GET `/api/resumes/templates/:id`
+
+Returns a system template or a custom template owned by the authenticated user.
+
+## Portfolio Templates
 
 ### GET `/api/templates`
 

@@ -30,9 +30,11 @@ PortfolioPro Backend is a Node.js + Express API for a multi-tenant portfolio and
 - Template builder (TODO Later)
 - Public portfolio APIs
 
-### Resume Suite (TODO Later)
+### Resume Suite
 
 - Resume builder APIs
+- Resume version history
+- System and user-created resume templates
 - ATS scoring engine
 - PDF generation
 
@@ -114,8 +116,17 @@ npm run prisma:generate
   - `POST /api/categories` admin only
   - `PATCH /api/categories/:id` admin only; supports `isActive`
 - `/api/templates`
+- `/api/resumes`
+  - `GET /api/resumes`
+  - `POST /api/resumes`
+  - `GET /api/resumes/:id`
+  - `PATCH /api/resumes/:id`
+  - `DELETE /api/resumes/:id`
+  - `GET /api/resumes/:id/versions`
+  - `POST /api/resumes/:id/versions`
+  - `GET /api/resumes/templates`
+  - `POST /api/resumes/templates`
 - `/api/portfolios`
-- `/api/resumes` (TODO Later placeholder)
 - `/api/ai` (TODO Later placeholder)
 - `/api/billing` (TODO Later placeholder)
 - `/api/admin/dashboard` admin only

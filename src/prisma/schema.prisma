@@ -13,38 +13,98 @@ enum Role {
 }
 
 model User {
-  id             String     @id @default(uuid())
-  email          String     @unique
-  password       String
-  name           String?
-  role           Role       @default(USER)
-  isActive       Boolean    @default(true)
-  isSubscribed   Boolean    @default(false)
-  mobileNumber   String?
-  createdAt      DateTime   @default(now())
-  categories     Category[]
-  templates      Template[]
+  id              String           @id @default(uuid()) @db.Uuid
+  email           String           @unique
+  password        String
+  name            String?
+  role            Role             @default(USER)
+  isActive        Boolean          @default(true)
+  isSubscribed    Boolean          @default(false)
+  mobileNumber    String?
+  createdAt       DateTime         @default(now())
+  categories      Category[]
+  templates       Template[]
+  resumes         Resume[]
+  resumeTemplates ResumeTemplate[]
+  resumeVersions  ResumeVersion[]  @relation("ResumeVersionCreator")
+
+  @@map("users")
 }
 
 model Category {
-  id                String     @id @default(uuid())
+  id                String     @id @default(uuid()) @db.Uuid
   categoryName      String
   isActive          Boolean    @default(true)
   categoryImagePath String?
   createdOn         DateTime   @default(now())
-  createdById       String
+  createdById       String     @db.Uuid
   createdBy         User       @relation(fields: [createdById], references: [id])
   templates         Template[]
 }
 
 model Template {
-  id           String   @id @default(uuid())
+  id           String   @id @default(uuid()) @db.Uuid
   templateName String
-  categoryType String
+  categoryType String   @db.Uuid
   category     Category @relation(fields: [categoryType], references: [id])
   createdOn    DateTime @default(now())
-  createdById  String
+  createdById  String   @db.Uuid
   createdBy    User     @relation(fields: [createdById], references: [id])
   isActive     Boolean  @default(true)
   code         String
+}
+
+model Resume {
+  id               String          @id @default(uuid()) @db.Uuid
+  userId           String          @map("user_id") @db.Uuid
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String          @db.VarChar(255)
+  slug             String?         @unique @db.VarChar(255)
+  domain           String?         @db.VarChar(100)
+  templateId       String?         @map("template_id") @db.Uuid
+  template         ResumeTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  status           String          @default("draft") @db.VarChar(50)
+  visibility       String          @default("private") @db.VarChar(50)
+  currentVersionId String?         @unique @map("current_version_id") @db.Uuid
+  currentVersion   ResumeVersion?  @relation("CurrentResumeVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
+  themeSettings    Json            @default("{}") @map("theme_settings")
+  versions         ResumeVersion[] @relation("ResumeVersions")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  @@map("resumes")
+}
+
+model ResumeVersion {
+  id            String   @id @default(uuid()) @db.Uuid
+  resumeId      String   @map("resume_id") @db.Uuid
+  resume        Resume   @relation("ResumeVersions", fields: [resumeId], references: [id], onDelete: Cascade)
+  versionNumber Int      @map("version_number")
+  resumeJson    Json     @map("resume_json")
+  changeSummary String?  @map("change_summary") @db.Text
+  createdBy     String?  @map("created_by") @db.Uuid
+  creator       User?    @relation("ResumeVersionCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  currentFor    Resume?  @relation("CurrentResumeVersion")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@unique([resumeId, versionNumber])
+  @@map("resume_versions")
+}
+
+model ResumeTemplate {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @db.VarChar(255)
+  slug         String?  @unique @db.VarChar(255)
+  thumbnailUrl String?  @map("thumbnail_url") @db.Text
+  category     String?  @db.VarChar(100)
+  isPremium    Boolean  @default(false) @map("is_premium")
+  isSystem     Boolean  @default(false) @map("is_system")
+  isActive     Boolean  @default(true) @map("is_active")
+  config       Json     @default("{}")
+  createdById  String?  @map("created_by_id") @db.Uuid
+  createdBy    User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  resumes      Resume[]
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("resume_templates")
 }

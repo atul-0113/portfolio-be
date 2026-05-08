@@ -16,7 +16,11 @@ router.get('/dashboard', async (req, res, next) => {
       activeCategories,
       inactiveCategories,
       totalTemplates,
-      activeTemplates
+      activeTemplates,
+      totalResumes,
+      publishedResumes,
+      privateResumes,
+      resumeTemplates
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { isActive: true } }),
@@ -25,7 +29,11 @@ router.get('/dashboard', async (req, res, next) => {
       prisma.category.count({ where: { isActive: true } }),
       prisma.category.count({ where: { isActive: false } }),
       prisma.template.count(),
-      prisma.template.count({ where: { isActive: true } })
+      prisma.template.count({ where: { isActive: true } }),
+      prisma.resume.count(),
+      prisma.resume.count({ where: { status: 'published' } }),
+      prisma.resume.count({ where: { visibility: 'private' } }),
+      prisma.resumeTemplate.count({ where: { isActive: true } })
     ]);
 
     res.status(200).json({
@@ -42,6 +50,14 @@ router.get('/dashboard', async (req, res, next) => {
       templates: {
         total: totalTemplates,
         active: activeTemplates
+      },
+      resumes: {
+        total: totalResumes,
+        published: publishedResumes,
+        private: privateResumes
+      },
+      resumeTemplates: {
+        active: resumeTemplates
       }
     });
   } catch (error) {

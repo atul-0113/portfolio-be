@@ -18,6 +18,7 @@ const swaggerDocument = {
     { name: 'Auth' },
     { name: 'Users' },
     { name: 'Categories' },
+    { name: 'Resumes' },
     { name: 'TODO' }
   ],
   components: {
@@ -291,9 +292,106 @@ const swaggerDocument = {
     },
     '/resumes': {
       get: {
-        tags: ['TODO'],
-        summary: 'Resume Suite placeholder',
-        responses: { 501: { description: 'TODO Later' } }
+        tags: ['Resumes'],
+        summary: 'List resumes',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Resume list' } }
+      },
+      post: {
+        tags: ['Resumes'],
+        summary: 'Create resume',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['title'],
+                properties: {
+                  title: { type: 'string' },
+                  slug: { type: 'string' },
+                  domain: { type: 'string' },
+                  templateId: { type: 'string', format: 'uuid' },
+                  status: { type: 'string', example: 'draft' },
+                  visibility: { type: 'string', example: 'private' },
+                  themeSettings: { type: 'object' },
+                  resumeJson: { type: 'object' },
+                  changeSummary: { type: 'string' }
+                }
+              }
+            }
+          }
+        },
+        responses: { 201: { description: 'Resume created' } }
+      }
+    },
+    '/resumes/{id}': {
+      get: {
+        tags: ['Resumes'],
+        summary: 'Get resume',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Resume details' }, 404: { description: 'Resume not found' } }
+      },
+      patch: {
+        tags: ['Resumes'],
+        summary: 'Update resume metadata',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Resume updated' } }
+      },
+      delete: {
+        tags: ['Resumes'],
+        summary: 'Delete resume',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Resume deleted' } }
+      }
+    },
+    '/resumes/{id}/versions': {
+      get: {
+        tags: ['Resumes'],
+        summary: 'List resume versions',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: { 200: { description: 'Resume version list' } }
+      },
+      post: {
+        tags: ['Resumes'],
+        summary: 'Create resume version',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['resumeJson'],
+                properties: {
+                  resumeJson: { type: 'object' },
+                  changeSummary: { type: 'string' }
+                }
+              }
+            }
+          }
+        },
+        responses: { 201: { description: 'Resume version created' } }
+      }
+    },
+    '/resumes/templates': {
+      get: {
+        tags: ['Resumes'],
+        summary: 'List resume templates',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Resume template list' } }
+      },
+      post: {
+        tags: ['Resumes'],
+        summary: 'Create custom resume template',
+        security: [{ bearerAuth: [] }],
+        responses: { 201: { description: 'Resume template created' } }
       }
     },
     '/ai': {

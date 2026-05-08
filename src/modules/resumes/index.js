@@ -1,3 +1,1 @@
-const { createTodoRouter } = require('../../utils/todoRouter');
-
-module.exports = createTodoRouter('Resume Suite');
+module.exports = require('../../routes/resume.routes');

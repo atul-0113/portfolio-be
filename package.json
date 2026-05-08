@@ -11,7 +11,9 @@
     "prisma:generate": "prisma generate --schema=src/prisma/schema.prisma",
     "prisma:validate": "prisma validate --schema=src/prisma/schema.prisma",
     "prisma:push": "prisma db push --schema=src/prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate deploy --schema=src/prisma/schema.prisma",
     "prisma:seed": "node src/prisma/seed.js",
+    "resume:backfill-versions": "node src/prisma/backfill-resume-versions.js",
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "jest --passWithNoTests"
