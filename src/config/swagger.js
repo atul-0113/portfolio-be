@@ -336,7 +336,7 @@ const swaggerDocument = {
       },
       patch: {
         tags: ['Resumes'],
-        summary: 'Update resume metadata',
+        summary: 'Save resume and create a new version',
         security: [{ bearerAuth: [] }],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
         responses: { 200: { description: 'Resume updated' } }
@@ -356,28 +356,6 @@ const swaggerDocument = {
         security: [{ bearerAuth: [] }],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
         responses: { 200: { description: 'Resume version list' } }
-      },
-      post: {
-        tags: ['Resumes'],
-        summary: 'Create resume version',
-        security: [{ bearerAuth: [] }],
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
-        requestBody: {
-          required: true,
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                required: ['resumeJson'],
-                properties: {
-                  resumeJson: { type: 'object' },
-                  changeSummary: { type: 'string' }
-                }
-              }
-            }
-          }
-        },
-        responses: { 201: { description: 'Resume version created' } }
       }
     },
     '/resumes/templates': {

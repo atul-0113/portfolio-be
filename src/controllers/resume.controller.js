@@ -63,18 +63,6 @@ const resumeController = {
     }
   },
 
-  async createVersion(req, res, next) {
-    try {
-      const version = await resumeService.createVersion(req.params.id, req.user, req.body);
-      res.status(201).json({
-        message: 'Resume version created successfully',
-        version
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-
   async listTemplates(req, res, next) {
     try {
       const templates = await resumeService.listTemplates(req.user);

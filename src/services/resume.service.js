@@ -53,15 +53,39 @@ const assertUuid = (value, fieldName) => {
 };
 
 const buildInitialResumeJson = ({ title, domain, themeSettings }) => ({
+  title,
+  domain: domain || null,
+  status: 'draft',
+  visibility: 'private',
+  version: 1,
+  isPrimary: false,
+  tags: [],
   metadata: {
     title,
     domain: domain || null,
-    createdFrom: 'resume-builder'
+    status: 'draft',
+    visibility: 'private',
+    version: 1,
+    isPrimary: false,
+    tags: []
   },
+  personalInformation: {},
   basics: {},
   sections: [],
-  themeSettings
+  themeSettings,
+  exportConfigurations: {}
 });
+
+const hasResumeDocumentPayload = (payload) => {
+  return Boolean(
+    payload.resumeJson ||
+    payload.metadata ||
+    payload.metaData ||
+    payload.personalInformation ||
+    payload.sections ||
+    payload.exportConfigurations
+  );
+};
 
 const canAccessResume = (resume, user) => {
   return user.role === 'ADMIN' || resume.userId === user.id;
@@ -71,12 +95,29 @@ const serializeResume = (resume) => {
   const latestVersion = Array.isArray(resume.versions) ? resume.versions[0] : null;
   const currentVersion = resume.currentVersion || latestVersion || null;
   const versionCount = resume._count?.versions ?? resume.versionCount ?? 0;
-  const { versions, _count, ...resumeData } = resume;
 
   return {
-    ...resumeData,
+    id: resume.id,
+    userId: resume.userId,
+    user: resume.user,
+    title: resume.title,
+    slug: resume.slug,
+    domain: resume.domain,
+    templateId: resume.templateId,
+    template: resume.template,
+    status: resume.status,
+    visibility: resume.visibility,
     currentVersionId: currentVersion?.id || resume.currentVersionId,
-    currentVersion,
+    currentVersion: currentVersion ? {
+      id: currentVersion.id,
+      versionNumber: currentVersion.versionNumber,
+      changeSummary: currentVersion.changeSummary,
+      createdBy: currentVersion.createdBy,
+      createdAt: currentVersion.createdAt
+    } : null,
+    themeSettings: resume.themeSettings,
+    createdAt: resume.createdAt,
+    updatedAt: resume.updatedAt,
     metadata: {
       title: resume.title,
       slug: resume.slug,
@@ -90,6 +131,88 @@ const serializeResume = (resume) => {
       createdAt: resume.createdAt,
       updatedAt: resume.updatedAt
     }
+  };
+};
+
+const buildResumeDocument = (resume) => {
+  const serializedResume = serializeResume(resume);
+  const latestVersion = Array.isArray(resume.versions) ? resume.versions[0] : null;
+  const fullCurrentVersion = resume.currentVersion || latestVersion || null;
+  const resumeJson = fullCurrentVersion?.resumeJson || {};
+  const jsonMetadata = resumeJson.metadata || {};
+
+  return {
+    ...resumeJson,
+    id: serializedResume.id,
+    userId: serializedResume.userId,
+    user: serializedResume.user,
+    title: serializedResume.title,
+    slug: serializedResume.slug,
+    domain: serializedResume.domain,
+    templateId: serializedResume.templateId || resumeJson.templateId || '',
+    template: serializedResume.template,
+    status: serializedResume.status,
+    visibility: serializedResume.visibility,
+    version: serializedResume.metadata.currentVersionNumber || resumeJson.version || 1,
+    themeSettings: serializedResume.themeSettings || resumeJson.themeSettings || {},
+    metadata: {
+      ...jsonMetadata,
+      title: jsonMetadata.title ?? serializedResume.title,
+      slug: jsonMetadata.slug ?? serializedResume.slug,
+      domain: jsonMetadata.domain ?? serializedResume.domain,
+      templateId: jsonMetadata.templateId ?? serializedResume.templateId ?? '',
+      status: jsonMetadata.status ?? serializedResume.status,
+      visibility: jsonMetadata.visibility ?? serializedResume.visibility,
+      version: jsonMetadata.version ?? serializedResume.metadata.currentVersionNumber ?? 1,
+      currentVersionId: serializedResume.metadata.currentVersionId,
+      currentVersionNumber: serializedResume.metadata.currentVersionNumber,
+      versionCount: serializedResume.metadata.versionCount,
+      createdAt: serializedResume.createdAt,
+      updatedAt: serializedResume.updatedAt
+    },
+    currentVersionId: serializedResume.currentVersionId,
+    currentVersion: fullCurrentVersion,
+    createdAt: serializedResume.createdAt,
+    updatedAt: serializedResume.updatedAt
+  };
+};
+
+const buildResumeJsonFromPayload = ({ payload, title, slug, domain, templateId, status, visibility, themeSettings, version }) => {
+  const source = payload.resumeJson || payload;
+  const incomingMetadata = source.metadata || source.metaData || {};
+  const metadata = {
+    ...incomingMetadata,
+    title: incomingMetadata.title ?? title,
+    slug: incomingMetadata.slug ?? slug,
+    domain: incomingMetadata.domain ?? domain,
+    templateId: incomingMetadata.templateId ?? templateId ?? '',
+    themeId: incomingMetadata.themeId ?? normalizeNullableString(payload.themeId) ?? source.themeId ?? '',
+    language: incomingMetadata.language ?? normalizeOptionalString(payload.language) ?? source.language ?? 'en',
+    status: incomingMetadata.status ?? status,
+    visibility: incomingMetadata.visibility ?? visibility,
+    version,
+    isPrimary: incomingMetadata.isPrimary ?? (typeof payload.isPrimary !== 'undefined' ? payload.isPrimary : source.isPrimary || false),
+    tags: incomingMetadata.tags ?? (Array.isArray(payload.tags) ? payload.tags : source.tags || [])
+  };
+
+  return {
+    ...source,
+    title,
+    slug,
+    domain,
+    templateId: templateId || '',
+    themeId: metadata.themeId,
+    language: metadata.language,
+    status,
+    visibility,
+    version,
+    isPrimary: metadata.isPrimary,
+    tags: metadata.tags,
+    metadata,
+    themeSettings: themeSettings || source.themeSettings || {},
+    personalInformation: source.personalInformation || {},
+    sections: Array.isArray(source.sections) ? source.sections : [],
+    exportConfigurations: source.exportConfigurations || {}
   };
 };
 
@@ -150,6 +273,42 @@ const getResumeForUser = async (resumeId, user) => {
   }
 
   return serializeResume(resume);
+};
+
+const getResumeDocumentForUser = async (resumeId, user) => {
+  assertUuid(resumeId, 'resumeId');
+
+  const resume = await prisma.resume.findUnique({
+    where: { id: resumeId },
+    include: {
+      template: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true
+        }
+      },
+      currentVersion: true,
+      versions: {
+        orderBy: { versionNumber: 'desc' },
+        take: 1
+      },
+      _count: {
+        select: { versions: true }
+      }
+    }
+  });
+
+  if (!resume) {
+    throw new ApiError(404, 'Resume not found');
+  }
+
+  if (!canAccessResume(resume, user)) {
+    throw new ApiError(403, 'Not authorized to access this resume');
+  }
+
+  return buildResumeDocument(resume);
 };
 
 const createResumeVersion = async ({ resumeId, resumeJson, changeSummary, createdBy }) => {
@@ -214,7 +373,6 @@ const resumeService = {
     const status = normalizeOptionalString(payload.status) || 'draft';
     const visibility = normalizeOptionalString(payload.visibility) || 'private';
     const themeSettings = payload.themeSettings || {};
-    const resumeJson = payload.resumeJson || buildInitialResumeJson({ title, domain, themeSettings });
     const changeSummary = normalizeOptionalString(payload.changeSummary);
 
     if (!title) {
@@ -231,6 +389,19 @@ const resumeService = {
     }
 
     const finalSlug = await buildUniqueSlug(slug || title, 'resume');
+    const resumeJson = hasResumeDocumentPayload(payload)
+      ? buildResumeJsonFromPayload({
+        payload,
+        title,
+        slug: finalSlug,
+        domain,
+        templateId,
+        status,
+        visibility,
+        themeSettings,
+        version: 1
+      })
+      : buildInitialResumeJson({ title, domain, themeSettings });
 
     return prisma.$transaction(async (tx) => {
       const resume = await tx.resume.create({
@@ -284,7 +455,7 @@ const resumeService = {
   },
 
   async getResume(resumeId, user) {
-    return getResumeForUser(resumeId, user);
+    return getResumeDocumentForUser(resumeId, user);
   },
 
   async updateResume(resumeId, user, payload) {
@@ -296,6 +467,7 @@ const resumeService = {
     const status = normalizeOptionalString(payload.status);
     const visibility = normalizeOptionalString(payload.visibility);
     const themeSettings = payload.themeSettings;
+    const latestVersionNumber = resume.metadata.currentVersionNumber || 0;
 
     if (templateId !== undefined && templateId !== null) {
       assertUuid(templateId, 'templateId');
@@ -312,36 +484,80 @@ const resumeService = {
         ? await buildUniqueSlug(title, 'resume', resumeId)
         : undefined;
 
-    return prisma.resume.update({
-      where: { id: resumeId },
-      data: {
-        ...(title ? { title } : {}),
-        ...(typeof nextSlug !== 'undefined' ? { slug: nextSlug } : {}),
-        ...(typeof domain !== 'undefined' ? { domain } : {}),
-        ...(typeof templateId !== 'undefined' ? { templateId } : {}),
-        ...(status ? { status } : {}),
-        ...(visibility ? { visibility } : {}),
-        ...(typeof themeSettings !== 'undefined' ? { themeSettings } : {})
-      },
-      include: {
-        template: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        },
-        currentVersion: true,
-        versions: {
-          orderBy: { versionNumber: 'desc' },
-          take: 1
-        },
-        _count: {
-          select: { versions: true }
+    const nextResumeData = {
+      title: title || resume.title,
+      slug: typeof nextSlug !== 'undefined' ? nextSlug : resume.slug,
+      domain: typeof domain !== 'undefined' ? domain : resume.domain,
+      templateId: typeof templateId !== 'undefined' ? templateId : resume.templateId,
+      status: status || resume.status,
+      visibility: visibility || resume.visibility,
+      themeSettings: typeof themeSettings !== 'undefined' ? themeSettings : resume.themeSettings
+    };
+
+    const nextVersionNumber = latestVersionNumber + 1;
+    const resumeJson = buildResumeJsonFromPayload({
+      payload,
+      title: nextResumeData.title,
+      slug: nextResumeData.slug,
+      domain: nextResumeData.domain,
+      templateId: nextResumeData.templateId,
+      status: nextResumeData.status,
+      visibility: nextResumeData.visibility,
+      themeSettings: nextResumeData.themeSettings,
+      version: nextVersionNumber
+    });
+
+    return prisma.$transaction(async (tx) => {
+      const updatedResume = await tx.resume.update({
+        where: { id: resumeId },
+        data: {
+          ...(title ? { title } : {}),
+          ...(typeof nextSlug !== 'undefined' ? { slug: nextSlug } : {}),
+          ...(typeof domain !== 'undefined' ? { domain } : {}),
+          ...(typeof templateId !== 'undefined' ? { templateId } : {}),
+          ...(status ? { status } : {}),
+          ...(visibility ? { visibility } : {}),
+          ...(typeof themeSettings !== 'undefined' ? { themeSettings } : {})
         }
-      }
-    }).then(serializeResume);
+      });
+
+      const version = await tx.resumeVersion.create({
+        data: {
+          resumeId,
+          versionNumber: nextVersionNumber,
+          resumeJson,
+          changeSummary: normalizeOptionalString(payload.changeSummary) || 'Resume updated',
+          createdBy: user.id
+        }
+      });
+
+      const resumeWithVersion = await tx.resume.update({
+        where: { id: updatedResume.id },
+        data: {
+          currentVersionId: version.id
+        },
+        include: {
+          template: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
+          currentVersion: true,
+          versions: {
+            orderBy: { versionNumber: 'desc' },
+            take: 1
+          },
+          _count: {
+            select: { versions: true }
+          }
+        }
+      });
+
+      return buildResumeDocument(resumeWithVersion);
+    });
   },
 
   async deleteResume(resumeId, user) {
@@ -355,21 +571,6 @@ const resumeService = {
     return prisma.resumeVersion.findMany({
       where: { resumeId },
       orderBy: { versionNumber: 'desc' }
-    });
-  },
-
-  async createVersion(resumeId, user, payload) {
-    await getResumeForUser(resumeId, user);
-
-    if (!payload.resumeJson) {
-      throw new ApiError(400, 'resumeJson is required');
-    }
-
-    return createResumeVersion({
-      resumeId,
-      resumeJson: payload.resumeJson,
-      changeSummary: normalizeOptionalString(payload.changeSummary),
-      createdBy: user.id
     });
   },
 

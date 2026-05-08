@@ -317,6 +317,8 @@ Response `200`:
 ### POST `/api/resumes`
 
 Creates a resume. Users may select a template with `templateId`, or omit it and provide custom `themeSettings` and `resumeJson`.
+The API accepts a flat frontend resume document or a wrapped `resumeJson` object. `title` is required.
+Flexible section item `content` objects are allowed for custom builders.
 
 Request:
 
@@ -359,7 +361,7 @@ Response `201`:
 
 ### GET `/api/resumes/:id`
 
-Returns a resume with its selected template and current version.
+Returns the full resume editor document from the current version, with database metadata overlaid.
 
 Response `200`:
 
@@ -367,10 +369,42 @@ Response `200`:
 {
   "id": "uuid",
   "title": "Senior Frontend Resume",
-  "template": {
-    "id": "uuid",
-    "name": "Modern Resume"
+  "slug": "senior-frontend-resume",
+  "domain": "frontend",
+  "templateId": "",
+  "themeId": "",
+  "language": "en",
+  "status": "draft",
+  "visibility": "private",
+  "version": 1,
+  "isPrimary": false,
+  "tags": ["frontend", "react"],
+  "metadata": {
+    "title": "Senior Frontend Resume",
+    "slug": "senior-frontend-resume",
+    "domain": "frontend",
+    "templateId": "",
+    "themeId": "",
+    "language": "en",
+    "status": "draft",
+    "visibility": "private",
+    "version": 1,
+    "isPrimary": false,
+    "tags": ["frontend", "react"],
+    "currentVersionId": "uuid",
+    "currentVersionNumber": 1,
+    "versionCount": 1
   },
+  "personalInformation": {},
+  "sections": [],
+  "themeSettings": {},
+  "exportConfigurations": {},
+  "user": {
+    "id": "uuid",
+    "name": "User Name",
+    "email": "user@example.com"
+  },
+  "template": null,
   "currentVersion": {
     "id": "uuid",
     "versionNumber": 1,
@@ -381,20 +415,32 @@ Response `200`:
 
 ### PATCH `/api/resumes/:id`
 
-Updates resume metadata, selected template, status, visibility, or theme settings.
+Saves resume changes. Every save automatically creates a new resume version and makes it current.
+All fields are optional on update, but when provided they are validated for the same shape as create.
 
 Request:
 
 ```json
 {
-  "title": "Updated Resume",
-  "templateId": "uuid",
-  "status": "published",
-  "visibility": "public",
-  "themeSettings": {
-    "font": "Lato",
-    "accentColor": "#111827"
-  }
+  "title": "Senior Frontend Engineer Resume",
+  "slug": "atul-sharma-resume",
+  "domain": "software-engineering",
+  "templateId": "",
+  "themeId": "",
+  "language": "en",
+  "status": "draft",
+  "visibility": "private",
+  "isPrimary": false,
+  "tags": ["frontend", "react", "nextjs"],
+  "personalInformation": {
+    "firstName": "Atul",
+    "lastName": "Sharma",
+    "fullName": "Atul Sharma"
+  },
+  "sections": [],
+  "themeSettings": {},
+  "exportConfigurations": {},
+  "changeSummary": "Updated resume content"
 }
 ```
 
@@ -406,7 +452,8 @@ Response `200`:
   "resume": {
     "id": "uuid",
     "title": "Updated Resume",
-    "visibility": "public"
+    "visibility": "public",
+    "version": 2
   }
 }
 ```
@@ -441,37 +488,6 @@ Response `200`:
     "createdAt": "2026-05-08T10:15:00.000Z"
   }
 ]
-```
-
-### POST `/api/resumes/:id/versions`
-
-Creates a new version and makes it the current version.
-
-Request:
-
-```json
-{
-  "resumeJson": {
-    "basics": {
-      "name": "User Name"
-    },
-    "sections": []
-  },
-  "changeSummary": "Updated skills section"
-}
-```
-
-Response `201`:
-
-```json
-{
-  "message": "Resume version created successfully",
-  "version": {
-    "id": "uuid",
-    "versionNumber": 2,
-    "resumeJson": {}
-  }
-}
 ```
 
 ## Resume Templates

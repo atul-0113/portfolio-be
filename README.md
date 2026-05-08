@@ -123,7 +123,6 @@ npm run prisma:generate
   - `PATCH /api/resumes/:id`
   - `DELETE /api/resumes/:id`
   - `GET /api/resumes/:id/versions`
-  - `POST /api/resumes/:id/versions`
   - `GET /api/resumes/templates`
   - `POST /api/resumes/templates`
 - `/api/portfolios`
